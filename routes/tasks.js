@@ -1,57 +1,52 @@
 const express = require('express');
 const router = express.Router();
 const verifyApiKey = require('../middleware/auth');
+const Task = require('../models/Task');
 
-let tasks = [
-  {
-    id: 1,
-    name: 'Comprar comida',
-    description: 'Ir al supermercado y comprar frutas y verduras'
-  },
-  {
-    id: 2,
-    name: 'Estudiar JavaScript',
-    description: 'Repasar promesas, async/await y fetch'
-  },
-  {
-    id: 3,
-    name: 'Hacer ejercicio',
-    description: 'Caminar 30 minutos o ir al gimnasio'
+
+router.get('/getTasks', verifyApiKey, async (req, res) => {
+  try {
+    const tasks = await Task.find();
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener tareas' });
   }
-];
-
-
-router.get('/getTasks', verifyApiKey, (req, res) => {
-  res.status(200).json(tasks);
 });
 
-router.post('/addTask', verifyApiKey, (req, res) => {
-  const { id, name, description } = req.body;
+router.post('/addTask', verifyApiKey, async (req, res) => {
+  const { name, description, dueDate } = req.body;
 
-  if (!id || !name || !description) {
-    return res.status(400).json({ error: 'Faltan parámetros: id, name o description' });
+  if (!name || !description) {
+    return res.status(400).json({ error: 'Faltan parámetros: name o description' });
   }
 
-  const newTask = { id, name, description };
-  tasks.push(newTask);
-  res.status(200).json({ message: 'Tarea agregada', task: newTask });
+  try {
+    const newTask = new Task({ name, description, dueDate });
+    await newTask.save(); // guarda en MongoDB
+    res.status(201).json({ message: 'Tarea agregada', task: newTask });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al agregar tarea' });
+  }
 });
 
-router.delete('/removeTask', verifyApiKey, (req, res) => {
+router.delete('/removeTask', verifyApiKey, async (req, res) => {
   const { id } = req.body;
 
   if (!id) {
     return res.status(400).json({ error: 'Falta el parámetro id' });
   }
 
-  const initialLength = tasks.length;
-  tasks = tasks.filter(task => task.id !== id);
+  try {
+    const deletedTask = await Task.findByIdAndDelete(id);
 
-  if (tasks.length === initialLength) {
-    return res.status(400).json({ error: 'No se encontró la tarea con ese id' });
+    if (!deletedTask) {
+      return res.status(400).json({ error: 'No se encontró la tarea con ese id' });
+    }
+
+    res.status(200).json({ message: 'Tarea eliminada' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar tarea' });
   }
-
-  res.status(200).json({ message: 'Tarea eliminada' });
 });
 
 module.exports = router;
