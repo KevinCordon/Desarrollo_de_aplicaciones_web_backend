@@ -26,16 +26,6 @@ app.use('/users', usersRouter);
 app.use('/', goalsRouter);
 app.use('/', tasksRouter);
 
-app.use((req, res, next) => {
-  const auth = req.headers['authorization'];
-  const validApiKey = '1234'; 
-
-  if (auth === validApiKey) {
-    next();
-  } else {
-    res.status(401).json({ error: 'No autorizado' });
-  }
-});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

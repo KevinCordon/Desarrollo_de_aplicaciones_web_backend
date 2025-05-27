@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const verifyApiKey = require('../middleware/auth');
 
 let goals = [
   {
@@ -29,24 +30,37 @@ let goals = [
   }
 ];
 
-router.get('/getGoals', (req, res) => {
-  res.json(goals);
+router.get('/getGoals', verifyApiKey, (req, res) => {
+  res.status(200).json(goals);
 });
 
-router.post('/addGoal', (req, res) => {
+router.post('/addGoal', verifyApiKey, (req, res) => {
   const { name, description, dueDate } = req.body;
+
+  if (!name || !description) {
+    return res.status(400).json({ error: 'Faltan parámetros: name o description' });
+  }
+
   const newGoal = { id: Date.now(), name, description, dueDate };
   goals.push(newGoal);
   res.status(201).json({ message: 'Meta agregada', goal: newGoal });
 });
 
-router.delete('/removeGoal', (req, res) => {
+router.delete('/removeGoal', verifyApiKey, (req, res) => {
   const { id } = req.body;
+
   if (!id) {
     return res.status(400).json({ error: 'ID requerido' });
   }
+
+  const initialLength = goals.length;
   goals = goals.filter(goal => goal.id !== id);
-  res.json({ message: 'Meta eliminada' });
+
+  if (goals.length === initialLength) {
+    return res.status(400).json({ error: 'Meta no encontrada' });
+  }
+
+  res.status(200).json({ message: 'Meta eliminada' });
 });
 
 module.exports = router;
