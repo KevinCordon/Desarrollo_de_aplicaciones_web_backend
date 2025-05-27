@@ -3,7 +3,7 @@ const router = express.Router();
 const verifyApiKey = require('../middleware/auth');
 const Goal = require('../models/Goal');
 
-// Obtener todas las metas
+
 router.get('/getGoals', verifyApiKey, async (req, res) => {
   try {
     const goals = await Goal.find();
@@ -13,7 +13,7 @@ router.get('/getGoals', verifyApiKey, async (req, res) => {
   }
 });
 
-// Agregar una nueva meta
+
 router.post('/addGoal', verifyApiKey, async (req, res) => {
   const { name, description, deadline } = req.body;
 
@@ -30,7 +30,7 @@ router.post('/addGoal', verifyApiKey, async (req, res) => {
   }
 });
 
-// Eliminar una meta por ID
+
 router.delete('/removeGoal', verifyApiKey, async (req, res) => {
   const { id } = req.body;
 
